@@ -1,6 +1,7 @@
 # geojson
 
-This package provides types for working with GeoJSON data.
+This package provides types for working with [GeoJSON](https://geojson.org/)
+data as defined in [RFC7946](https://tools.ietf.org/html/rfc7946).
 
 There are two layers available:
 * High-level types that provide a friendlier interface and attempt to do some
