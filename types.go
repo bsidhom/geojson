@@ -18,6 +18,13 @@ var _ Geometry = &LineString{}
 var _ Geometry = &MultiPoint{}
 var _ Geometry = &Point{}
 
+// A Wrapper wraps any GeoJSON object for JSON deserialization when the base
+// type is not known in advance. If the type is known or if an object is being
+// serialized, the bare type itself can be used.
+type Wrapper struct {
+	Value Object
+}
+
 // An Object is any GeoJSON-encoded value. Protocols are advised to wrap outer
 // (transmitted) data in FeatureCollections, if doing so makes sense.
 type Object interface {
@@ -33,6 +40,7 @@ type Object interface {
 // - MultiPoint
 // - Point
 type Geometry interface {
+	Object
 	isGeometry()
 }
 
@@ -40,8 +48,6 @@ type Geometry interface {
 type FeatureCollection struct {
 	// The features contained in this collection.
 	Features []Feature
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
 }
 
 func (*FeatureCollection) isObject() {}
@@ -53,8 +59,9 @@ type Feature struct {
 	// Properties associated with this feature. For example, this might include
 	// a feature name along with other standard metadata.
 	Properties map[string]interface{}
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	// ID associated with this feature. Optional. For best compatibility, this
+	// should go under properties.
+	ID string
 }
 
 func (*Feature) isObject() {}
@@ -64,8 +71,6 @@ func (*Feature) isObject() {}
 // that applications should avoid doing so.
 type GeometryCollection struct {
 	Geometries []Geometry
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
 }
 
 func (*GeometryCollection) isObject() {}
@@ -75,9 +80,7 @@ func (*GeometryCollection) isGeometry() {}
 // A MultiPolygon is a collection of Polygons.
 type MultiPolygon struct {
 	// Polygons in this MultiPolygon.
-	Coordinates []Polygon
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	Polygons []Polygon
 }
 
 func (*MultiPolygon) isObject() {}
@@ -103,9 +106,7 @@ func (*MultiPolygon) isGeometry() {}
 type Polygon struct {
 	// Linear rings that constitute this Polygon. Each LineString must consist
 	// of at least 4 positions.
-	Coordinates []LineString
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	Rings []LineString
 }
 
 func (*Polygon) isObject() {}
@@ -118,9 +119,7 @@ func (*Polygon) isGeometry() {}
 // form linear rings.
 type MultiLineString struct {
 	// LineStrings within this MultiLineString.
-	Coordinates []LineString
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	Lines []LineString
 }
 
 func (*MultiLineString) isObject() {}
@@ -131,9 +130,7 @@ func (*MultiLineString) isGeometry() {}
 // contiguous path.
 type LineString struct {
 	// Positions that make up this LineString. Must contain at least 2 points.
-	Coordinates []Point
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	Points []Point
 }
 
 func (*LineString) isObject() {}
@@ -143,9 +140,7 @@ func (*LineString) isGeometry() {}
 // A MultiPoint is a collection of multiple point positions.
 type MultiPoint struct {
 	// Individual points that make up this MultiPoint.
-	Coordinates []Point
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
+	Points []Point
 }
 
 func (*MultiPoint) isObject() {}
@@ -163,8 +158,6 @@ type Point struct {
 	Elevation float64
 	// Whether the associated elevation is valid.
 	HasElevation bool
-	// Additional data associated with this JSON node.
-	AdditionalData map[string]interface{}
 }
 
 func (*Point) isObject() {}
